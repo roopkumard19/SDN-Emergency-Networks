@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Simple markers</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      function initMap() {
+        var jsonFromPy = {0: {lat: 37.344691, lng: -121.873373, name:"m1"}, 1: {lat: 37.344846, lng: -121.873891, name:"m2"}};
+        var myLatLng = jsonFromPy[0];
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 17,
+          center: myLatLng,
+          mapTypeId: 'satellite'
+        });
+
+        var arrayLength = Object.keys(jsonFromPy).length;
+        console.log(arrayLength);
+        for (var i = 0; i < arrayLength; i++) {
+          myLatLng = {lat:jsonFromPy[i].lat, lng:jsonFromPy[i].lng} ;
+          console.log("Pos:" + myLatLng.lat + myLatLng.lng);
+          var marker = new google.maps.Marker({
+            position: myLatLng,
+            map: map,
+            title: jsonFromPy[i].name
+          });
+        }
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDJbbwFap_qPasM0txWla5pHR-EYEctweY&callback=initMap">
+    </script>
+  </body>
+</html>
