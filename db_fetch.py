@@ -12,6 +12,10 @@ pnconfig.subscribe_key = "sub-c-e2aa1c80-b6f9-11e7-b8f2-c6027b8a2e05"
 pnconfig.publish_key = "pub-c-b3b3434d-7fbb-4ce6-bcc2-6762382de1d4"
 pubnub = PubNub(pnconfig)
 
+def show(msg, stat):
+    if msg and stat: print( msg.timetoken, stat.status_code )
+    else           : print( "Error", stat and stat.status_code )
+
 # Connect to the local MySQL db
 cnx = mysql.connector.connect(user='root', password='toor@1234',database='Mesh')
 cursor = cnx.cursor()
@@ -27,9 +31,9 @@ for (Name,LAT,LNG) in cursor:
 	result.append(Name)
 	result.append(LAT)
 	result.append(LNG)
-	final = json.dumps(result) 
-	pubnub.publish().channel("logging").message(final)
-	print(final)
+	#final = json.dumps(result) 
+	pubnub.publish().channel("logging").message(result).async(show)
+	print(result)
 cursor.close()
 cnx.close()
 
