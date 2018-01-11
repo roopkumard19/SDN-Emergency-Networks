@@ -16,25 +16,42 @@ def show(msg, stat):
     if msg and stat: print( msg.timetoken, stat.status_code )
     else           : print( "Error", stat and stat.status_code )
 
-# Connect to the local MySQL db
-cnx = mysql.connector.connect(user='root', password='toor@1234',database='Mesh')
-cursor = cnx.cursor()
 
-# Query the DB for Name, Latitude & Longitude values
-query = "SELECT Name,LAT,LNG FROM Nodes"
-cursor.execute(query)
 
-#Parse & JSONify the values from the query result
-for (Name,LAT,LNG) in cursor:
-	#print("{}, {}, {}".format(Name, LAT, LNG))
-	result = []
-	result.append(Name)
-	result.append(LAT)
-	result.append(LNG)
-	#final = json.dumps(result) 
-	pubnub.publish().channel("logging").message(result).async(show)
-	print(result)
-cursor.close()
-cnx.close()
+
+def execute_query(query):
+	# Connect to the local MySQL db
+	cnx = mysql.connector.connect(user='root', password='toor@1234',database='Mesh')
+	cursor = cnx.cursor()
+	cursor.execute(query)
+	result = cursor.fetchall()
+	cursor.close()
+	cnx.close()
+	return result
+
+def send_to_map():
+	# Query the DB for Name, Latitude & Longitude values
+	query = "SELECT ID,Name,LAT,LNG FROM Nodes"
+	cursor = execute_query(query)
+	final = {}
+
+	#Parse & JSONify the values from the query result
+	for (ID,Name,LAT,LNG) in cursor:
+		#print("{}, {}, {}".format(Name, LAT, LNG))
+		result = {}
+		result['name'] = Name
+		result['lat'] = LAT
+		result['lng'] = LNG
+		final[ID] = result 
+
+	print(final)
+
+	pubnub.publish().channel("mesh_nodes").message(final).async(show)
+
+
+def get_location_from_ip(ip):
+	query = "SELECT LAT,LNG FROM Nodes WHERE IP=\""+ip+"\""
+	cursor = execute_query(query)
+	return list(cursor[0])
 
 
