@@ -22,6 +22,10 @@ def position_calculation(geo_loc):
 	if len(geo_loc) == 1:
 		send_drone(geo_loc[0])
 	elif
+	"1) Call centroid.py with location of failed nodes (F1)
+	This returns list C1 (list of centroids of all the clusters) 
+	"
+
 
 class MySubscribeCallback(SubscribeCallback):
 	def presence(self, pubnub, presence):
@@ -43,6 +47,15 @@ def main():
 	pubnub.subscribe().channels("failed_nodes").execute() 
 	reactor.callLater(10, pubnub.stop)  # stop reactor loop after 30 seconds
     	pubnub.start()
+
+	"Make this script as a server
+	Receive the failed nodes (F1)
+	Update the database with the failed nodes
+	call the position_calculation function with input as failed nodes (F1)
+	Get the active nodes (A1) from database.
+	For each centroid, find out the nearest node from A1.
+	Call the send_drone function with the pair(centroid,nearest active node)
+	This function will return the precide positions to the drone. "
 
 if __name__ == "__main__":
 	main()
