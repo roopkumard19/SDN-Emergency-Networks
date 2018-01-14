@@ -21,14 +21,13 @@ with open("log.log", 'r') as infile:
 def get_centermost_point(cluster):
 	centroid = (MultiPoint(cluster).centroid.x, MultiPoint(cluster).centroid.y)
 	centermost_point = min(cluster, key=lambda point: great_circle(point, centroid).m)
-	print centermost_point
+	#print centermost_point
 	return tuple(centermost_point)
 
 
 def form_cluster(coords):
 	coords = np.array(coords)
 	kms_per_radian = 6371.0088
-	print type(coords)
 
 	# Assuming that mesh nodes are 22 feet apart from each other and converting it to kilometers.
 	epsilon = 4.46 / kms_per_radian
@@ -41,15 +40,18 @@ def form_cluster(coords):
 	num_clusters = len(set(cluster_labels))
 
 	message = 'Clustered {:,} points down to {:,} clusters, for {:.1f}% compression in {:,.2f} seconds'
-	print(message.format(len(df), num_clusters, 100*(1 - float(num_clusters) / len(df)), time.time()-start_time))
+	#print(message.format(len(df), num_clusters, 100*(1 - float(num_clusters) / len(df)), time.time()-start_time))
 
 	# turn the clusters in to a pandas series, where each element is a cluster of points
 	clusters = pd.Series([coords[cluster_labels==n] for n in range(num_clusters)])
 
-
-
 	centermost_points = clusters.map(get_centermost_point)
 
 	# unzip the list of centermost points (lat, lon) tuples into separate lat and lon lists
+	loc = []
 	lats, lons = zip(*centermost_points)
+	for lat,lon in zip(lats,lons):
+		loc.append([lat,lon])
+	return loc
+
 	

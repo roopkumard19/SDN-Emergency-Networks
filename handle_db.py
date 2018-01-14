@@ -20,11 +20,20 @@ def show(msg, stat):
 
 
 def execute_query(query):
-	# Connect to the local MySQL db
-	cnx = mysql.connector.connect(user='root', password='toor@1234',database='Mesh')
-	cursor = cnx.cursor()
-	cursor.execute(query)
-	result = cursor.fetchall()
+	try:
+		# Connect to the local MySQL db
+		cnx = mysql.connector.connect(user='root', password='toor@1234',database='Mesh')
+		cursor = cnx.cursor()
+		result = ""
+		cursor.execute(query)
+		if "update" not in query:
+			result = cursor.fetchall()
+                
+	except mysql.connector.Error as err:
+		print("Failed executing query: {}".format(err))
+		exit(1)
+
+	cnx.commit()
 	cursor.close()
 	cnx.close()
 	return result
@@ -55,3 +64,13 @@ def get_location_from_ip(ip):
 	return list(cursor[0])
 
 
+def update_db(ip_list):
+	for ip in ip_list:
+		query = "update Nodes set Status = \"Inactive\" where IP = \""+ip+"\""	
+		print(query)
+		execute_query(query)
+
+def get_active_nodes():
+	query = "SELECT LAT,LNG FROM Nodes WHERE Status=\"active\""
+	cursor = execute_query(query)
+	return [list(elem) for elem in cursor]
