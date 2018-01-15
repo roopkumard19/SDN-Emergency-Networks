@@ -54,10 +54,11 @@
       var markMeshNodes = function(payload) {
         console.log(payload);
         if (payload.channel == "mesh_nodes") {
+	console.log("mmark_mesh")
           var jsonFromPy = payload.message;//{0: {lat: 37.344691, lng: -121.873373, name:"m1"}, 1: {lat: 37.344846, lng: -121.873891, name:"m2"}};
           var arrayLength = Object.keys(jsonFromPy).length;
           console.log(arrayLength);
-          for (var i = 1; i <= arrayLength; i++) {
+          for (var i = 0; i < arrayLength; i++) {
             myLatLng = {lat:jsonFromPy[i].lat, lng:jsonFromPy[i].lng};
             var Lat = jsonFromPy[i].lat;
             var Lng = jsonFromPy[i].lng;

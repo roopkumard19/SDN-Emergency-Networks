@@ -30,7 +30,7 @@ def form_cluster(coords):
 	kms_per_radian = 6371.0088
 
 	# Assuming that mesh nodes are 22 feet apart from each other and converting it to kilometers.
-	epsilon = 4.46 / kms_per_radian
+	epsilon = 4.854 / kms_per_radian
 
 	start_time = time.time()
 	db = DBSCAN(eps=epsilon, min_samples=1, algorithm='ball_tree', metric='haversine').fit(np.radians(coords))

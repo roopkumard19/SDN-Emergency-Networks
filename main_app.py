@@ -17,17 +17,20 @@ pnconfig.publish_key = "pub-c-b3b3434d-7fbb-4ce6-bcc2-6762382de1d4"
 pubnub = PubNub(pnconfig)
 
 
-def send_drone(location):
-	print "sending to {}".format(location)
+def send_drone(centroid_active_pair):
+	final = {}
+	#for pair in centroid_active_pair:
+		
+	print "sending drone to {}".format(centroid_active_pair)
 
 def position_calculation(c_list, a_list):
 	for c in c_list:
 		mini = 1 # 1 km
 		for a in a_list:
-			temp = havesine(c[0], c[1], a[0], a[1])
+			temp = haversine(c[0], c[1], a[0], a[1])
 			if mini > temp:
 				mini = temp
-				nearest_active = list(a[0], a[1])
+				nearest_active = [a[0], a[1]]
 		send_drone([c, nearest_active])
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -54,42 +57,21 @@ class MySubscribeCallback(SubscribeCallback):
 		pass
 
 	def message(self, pubnub, message):
-		ip_list = message.message
-		geo_loc  = []
-		update_db(ip_list)
-		for ip in ip_list:
-			geo_loc.append(get_location_from_ip(ip))
+		failed_ip_list = message.message
+		failed_node_geo_loc  = []
+		update_db(failed_ip_list)
+		for ip in failed_ip_list:
+			failed_node_geo_loc.append(get_location_from_ip(ip))
 			#print ip
-		centroids = form_cluster(geo_loc)	
+		centroids = form_cluster(failed_node_geo_loc)	
 		active_nodes = get_active_nodes()
 		position_calculation(centroids, active_nodes)
 
 def main():
-	#pubnub.add_listener(MySubscribeCallback())
-	#pubnub.subscribe().channels("failed_nodes").execute() 
-	#reactor.callLater(10, pubnub.stop)  # stop reactor loop after 30 seconds
-    	#pubnub.start()
-	print haversine(37.411823, -121.995850, 37.411823, -121.995850)
-	geo_loc = [[37.411823, -121.995850],
-		[37.412331, -121.995888],
-		[37.41182, -121.9959],
-		[37.41182, -121.99589],
-		[37.411821667, -121.9959],
-		[37.41182, -121.9959],
-		[37.41182, -121.99589],
-		[37.411818333, -121.99589],
-		[37.411818333, -121.99589],
-		[37.41182, -121.99589],
-		[38.41182, -121.99589],
-		[37.411818333, -121.99589],
-		[37.41182, -121.99589],
-		[37.41185, -121.9959],
-		[37.41192, -121.99589899],
-		[40.411931667, -121.9959],
-		[37.411953333, -121.99589],
-		[37.41205, -121.9959],
-		[37.412084, -121.9959],
-		[37.41216, -121.9959]]
+	pubnub.add_listener(MySubscribeCallback())
+	pubnub.subscribe().channels("failed_nodes").execute() 
+	reactor.callLater(10, pubnub.stop)  # stop reactor loop after 30 seconds
+    	pubnub.start()
 
 #	print len(geo_loc)
 #	position_calculation(geo_loc)
@@ -98,8 +80,8 @@ def main():
 	####Update the database with the failed nodes
 	#####call the position_calculation function with input as failed nodes (F1)
 	####Get the active nodes (A1) from database.
-	For each centroid, find out the nearest node from A1.
-	Call the send_drone function with the pair(centroid,nearest active node)
+	###3For each centroid, find out the nearest node from A1.
+	####Call the send_drone function with the pair(centroid,nearest active node)
 	This function will return the precide positions to the drone. '''
 
 if __name__ == "__main__":
