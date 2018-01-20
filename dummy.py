@@ -43,8 +43,8 @@ def mesh_nodes_dummy_call():
 
 
 def main():
-	mesh_nodes_dummy_call()
-#	failed_nodes_dummy_call()
+#	mesh_nodes_dummy_call()
+	failed_nodes_dummy_call()
 
 if __name__ == '__main__':
 	main()

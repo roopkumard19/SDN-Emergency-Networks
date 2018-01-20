@@ -8,7 +8,14 @@ import sys
 import time
 from twisted.internet import reactor
 from centroid import *
-from math import radians, cos, sin, asin, sqrt
+from math import radians, degrees, cos, sin, asin, sqrt, atan2
+from pygeodesy.sphericalNvector import LatLon
+from pygeodesy import R_NM, F_D, F_DM, F_DMS, F_RAD, \
+                      degrees, isclockwise, isconvex, isenclosedby, \
+                      m2NM
+
+import re
+
 
 # Connect to the PubNub server
 pnconfig = PNConfiguration()
@@ -16,12 +23,31 @@ pnconfig.subscribe_key = "sub-c-e2aa1c80-b6f9-11e7-b8f2-c6027b8a2e05"
 pnconfig.publish_key = "pub-c-b3b3434d-7fbb-4ce6-bcc2-6762382de1d4"
 pubnub = PubNub(pnconfig)
 
+distance_threshold = 0.00762 # 25 feet in km
 
 def send_drone(centroid_active_pair):
+	print "In send drone centroid_active_pair: {}".format(centroid_active_pair)
 	final = {}
-	#for pair in centroid_active_pair:
+	lat1 = centroid_active_pair[0][0]
+	lon1 = centroid_active_pair[0][1]
+	lat2 = centroid_active_pair[1][0]
+	lon2 = centroid_active_pair[1][1]
+	dist = haversine(lat1, lon1, lat2, lon2)
+	print "init: dist:{}".format(dist)
+	
+	if dist <= distance_threshold:
+		print "Sending drone to:{}".format([lat1, lon1])
+
+        q = LatLon(lat2, lon2)
+	while dist > distance_threshold:
+		p = LatLon(lat1, lon1)
+        	i = p.intermediateTo(q, (distance_threshold/dist))
+		print "dms:{}".format(i)
+	        lat1,lon1 = map(degrees, list(i.to2ab()))
+		dist = haversine(lat1, lon1, lat2, lon2)
+		print "cur_dist:{}".format(dist)
+		print "Sending drone to:{}".format([lat1, lon1])
 		
-	print "sending drone to {}".format(centroid_active_pair)
 
 def position_calculation(c_list, a_list):
 	for c in c_list:
@@ -31,7 +57,7 @@ def position_calculation(c_list, a_list):
 			if mini > temp:
 				mini = temp
 				nearest_active = [a[0], a[1]]
-		send_drone([c, nearest_active])
+		send_drone([nearest_active, c])
 
 def haversine(lat1, lon1, lat2, lon2):
     """
@@ -63,7 +89,8 @@ class MySubscribeCallback(SubscribeCallback):
 		for ip in failed_ip_list:
 			failed_node_geo_loc.append(get_location_from_ip(ip))
 			#print ip
-		centroids = form_cluster(failed_node_geo_loc)	
+		centroids = form_cluster(failed_node_geo_loc)
+		print "centroids: {}".format(centroids)	
 		active_nodes = get_active_nodes()
 		position_calculation(centroids, active_nodes)
 
