@@ -25,7 +25,7 @@ pubnub = PubNub(pnconfig)
 
 distance_threshold = 0.00762 # 25 feet in km
 
-def send_drone(centroid_active_pair):
+def uav_placement(centroid_active_pair):
 	print "In send drone centroid_active_pair: {}".format(centroid_active_pair)
 	final = {}
 	lat1 = centroid_active_pair[0][0]
@@ -49,7 +49,8 @@ def send_drone(centroid_active_pair):
 		print "Sending drone to:{}".format([lat1, lon1])
 		
 
-def position_calculation(c_list, a_list):
+def find_nearest_active(c_list, a_list):
+	final = []
 	for c in c_list:
 		mini = 1 # 1 km
 		for a in a_list:
@@ -57,7 +58,8 @@ def position_calculation(c_list, a_list):
 			if mini > temp:
 				mini = temp
 				nearest_active = [a[0], a[1]]
-		send_drone([nearest_active, c])
+		final.append([nearest_active, c])
+	return final		
 
 def haversine(lat1, lon1, lat2, lon2):
     """
@@ -92,7 +94,9 @@ class MySubscribeCallback(SubscribeCallback):
 		centroids = form_cluster(failed_node_geo_loc)
 		print "centroids: {}".format(centroids)	
 		active_nodes = get_active_nodes()
-		position_calculation(centroids, active_nodes)
+		centroid_active_pairs = find_nearest_active(centroids, active_nodes)
+		for pair in centroid_active_pairs:
+			uav_placement(pair)
 
 def main():
 	pubnub.add_listener(MySubscribeCallback())
@@ -109,7 +113,7 @@ def main():
 	####Get the active nodes (A1) from database.
 	###3For each centroid, find out the nearest node from A1.
 	####Call the send_drone function with the pair(centroid,nearest active node)
-	This function will return the precide positions to the drone. '''
+	###This function will return the precise positions to the drone. '''
 
 if __name__ == "__main__":
 	main()
