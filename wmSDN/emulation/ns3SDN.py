@@ -62,11 +62,19 @@ import ns.core
 from core.misc import ipaddr 
 from core.misc.ipaddr import MacAddr
 from corens3.obj import Ns3Session, Ns3WifiNet, CoreNs3Net
-import coreconf
+#sys.path.append(os.getcwd())
+#import coreconf
 
 # python interactive shell tab autocompletion
 import rlcompleter, readline
 readline.parse_and_bind('tab:complete')
+
+#hardcoded values
+custom_services_dir = '/home/user/wmSDN/emulation/core_services'
+openvswitch_dir = '/home/user/wmSDN/openvswitch'
+olsr_dir = '/home/user/wmSDN/olsrd'
+olsrd_dir = '/home/user/wmSDN/olsrd'
+scripts_dir = '/home/user/wmSDN/scripts'
 
 def add_to_server(session):
     ''' Add this session to the server's list if this script is executed from
@@ -89,13 +97,13 @@ def wifisession(opt):
     numWiredNode=5;
     ns.core.Config.SetDefault("ns3::WifiMacQueue::MaxPacketNumber",ns.core.UintegerValue(100)) 
     session = Ns3Session(persistent=True, duration=opt.duration)
-    session.cfg['openvswitch_dir'] = coreconf.openvswitch_dir
-    session.cfg['olsr_dir'] = coreconf.olsr_dir
-    session.cfg['olsrd_dir'] = coreconf.olsrd_dir
+    session.cfg['openvswitch_dir'] = openvswitch_dir #coreconf
+    session.cfg['olsr_dir'] = olsr_dir #coreconf
+    session.cfg['olsrd_dir'] = olsrd_dir #coreconf
     session.name = "ns3SDN"
     session.filename = session.name + ".py"
     session.node_count = str(numWirelessNode + numWiredNode + 1)
-    session.services.importcustom(coreconf.custom_services_dir)
+    session.services.importcustom(custom_services_dir) #coreconf
     add_to_server(session)
     
     wifi = session.addobj(cls=Ns3WifiNet, name="wlan1", rate="OfdmRate54Mbps")

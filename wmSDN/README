@@ -88,7 +88,7 @@ cd ..
 
 Usage
 =====
-
+#without GUI
 # start the emulation
 cd ~/ns-allinone-3.17/ns-3.17/
 sudo ./waf shell
@@ -96,6 +96,18 @@ cd ~/wmSDN/emulation
 cat coreconf.py #check the paths 
 # start the actual emulation
 core-cleanup.sh && python -i ./ns3SDN.py -d 7200
+
+# With GUI
+pushd ~/ns-allinone-3.16/ns-3.16
+sudo ./waf shell
+cored
+
+# in another terminal
+cored -e ./ns3wifi.py
+# in a third terminal
+core
+# now select the running session
+
 
 # on another shell
 cd ~/wmSDN/emulation
