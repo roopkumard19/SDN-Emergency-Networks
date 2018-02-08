@@ -24,22 +24,22 @@ ns3wifi.py - This script demonstrates using CORE with the ns-3 Wifi model.
 
 How to run this:
 
-    pushd ~/ns-allinone-3.16/ns-3.16
-    sudo ./waf shell
-    popd
-    python -i ns3wifi.py
+pushd ~/ns-allinone-3.16/ns-3.16
+sudo ./waf shell
+popd
+python -i ns3wifi.py
 
 To run with the CORE GUI:
 
-    pushd ~/ns-allinone-3.16/ns-3.16
-    sudo ./waf shell
-    cored
-    
-    # in another terminal
-    cored -e ./ns3wifi.py
-    # in a third terminal
-    core
-    # now select the running session
+pushd ~/ns-allinone-3.16/ns-3.16
+sudo ./waf shell
+cored
+
+# in another terminal
+cored -e ./ns3wifi.py
+# in a third terminal
+core
+# now select the running session
 
 '''
 
@@ -69,12 +69,30 @@ from corens3.obj import Ns3Session, Ns3WifiNet, CoreNs3Net
 import rlcompleter, readline
 readline.parse_and_bind('tab:complete')
 
-#hardcoded values
+
 custom_services_dir = '/home/user/wmSDN/emulation/core_services'
 openvswitch_dir = '/home/user/wmSDN/openvswitch'
 olsr_dir = '/home/user/wmSDN/olsrd'
 olsrd_dir = '/home/user/wmSDN/olsrd'
 scripts_dir = '/home/user/wmSDN/scripts'
+
+mesh_location = []
+def parse_input(file):
+    with open(file,'r') as f:
+        #n = int(f.readline())
+        n = int(f.readline().rstrip())
+
+        X = []
+        Y = []
+        for i in range(0,n):
+            temp = f.readline().rstrip().split(',')
+            X.append(int(temp[0]))
+            Y.append(int(temp[1]))
+        d = int(f.readline().rstrip())
+        print n
+        print X
+        print Y
+        print d
 
 def add_to_server(session):
     ''' Add this session to the server's list if this script is executed from
@@ -105,23 +123,23 @@ def wifisession(opt):
     session.node_count = str(numWirelessNode + numWiredNode + 1)
     session.services.importcustom(custom_services_dir) #coreconf
     add_to_server(session)
-    
+
     wifi = session.addobj(cls=Ns3WifiNet, name="wlan1", rate="OfdmRate54Mbps")
     #wifi.wifi.SetStandard(ns.wifi.WIFI_PHY_STANDARD_80211b)
     #wifi.wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager", "DataMode",ns.core.StringValue("DsssRate11Mbps"), "NonUnicastMode", ns.core.StringValue("DsssRate11Mbps"))
     wifi.setposition(30, 30, 0)
     wifi.phy.Set("RxGain", ns.core.DoubleValue(20.0))
     prefix = ipaddr.IPv4Prefix("10.0.0.0/16")
-    
+
     hub1 = session.addobj(cls=pycore.nodes.HubNode, name="hub1")
     hub1.setposition(450,300,0)
     ptp1 = session.addobj(cls=pycore.nodes.PtpNet, name="ptp1") 
     ptp2 = session.addobj(cls=pycore.nodes.PtpNet, name="ptp2") #controller network
-    
+
     nodes = []
     def ourmacaddress(n):
         return MacAddr.fromstring("02:02:00:00:00:%02x" % n)
-    
+
     node = session.addnode(name = "n1")
     node.newnetif(wifi, ["%s/%s" % (prefix.addr(1), prefix.prefixlen)], hwaddr=ourmacaddress(1))
     node.newnetif(ptp1,["192.168.1.2/24"])
@@ -133,25 +151,25 @@ def wifisession(opt):
         node = session.addnode(name = "n%d" % i)
         node.newnetif(wifi, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))
         if i == 3: #the wireless node which is attached to the controller
-                node.newnetif(ptp2,["10.100.100.2/24"])
+            node.newnetif(ptp2,["10.100.100.2/24"])
         session.services.addservicestonode(node,"router",myservice,verbose=True)
         session.services.bootnodeservices(node)
         nodes.append(node)
-    
+
     node = session.addnode(name = "gw5")
     node.newnetif(wifi, ["%s/%s" % (prefix.addr(5), prefix.prefixlen)], hwaddr=ourmacaddress(5))
     node.newnetif(hub1,["192.168.200.5/24"])
     session.services.addservicestonode(node,"router",myservice,verbose=True)
     session.services.bootnodeservices(node)
     nodes.append(node)
-    
+
     node = session.addnode(name = "gw6")
     node.newnetif(wifi, ["%s/%s" % (prefix.addr(6), prefix.prefixlen)], hwaddr=ourmacaddress(6))
     node.newnetif(hub1,["192.168.200.6/24"])
     session.services.addservicestonode(node,"router",myservice,verbose=True)
     session.services.bootnodeservices(node)
     nodes.append(node)
-    
+
     node = session.addnode(name = "client")
     node.newnetif(hub1,["192.168.200.1/24"])
     node.addaddr(0, "192.168.200.11/24")
@@ -160,66 +178,67 @@ def wifisession(opt):
     node.addaddr(0, "192.168.200.14/24")
     node.addaddr(0, "192.168.200.15/24")
     nodes.append(node)
-    
+
     node = session.addnode(name = "server")
     node.newnetif(ptp1,["192.168.1.1/24"])
     nodes.append(node)
-    
+
     node = session.addnode(name = "controller")
     node.newnetif(ptp2,["10.100.100.100/24"])
     nodes.append(node)
-    
+
     session.setupconstantmobility()
-    
+
     #n1
     nodes[0].setns3position(100,300,0)
     nodes[0].setposition(100,300,0)
-    
+
     #n2
     nodes[1].setns3position(200,300,0)
     nodes[1].setposition(200,300,0)
-    
+
     #n3
     nodes[2].setns3position(300,300,0)
     nodes[2].setposition(300,300,0)
-    
+
     #n4
     nodes[3].setns3position(400,300,0)
     nodes[3].setposition(400,300,0)
-    
+
     #gw5
     #nodes[4].setns3position(400,400,0)
     #nodes[4].setposition(400,400,0)
     nodes[4].setns3position(300,400,0)
     nodes[4].setposition(300,400,0)
-    
+
     #gw6
     nodes[5].setns3position(400,200,0)
     nodes[5].setposition(400,200,0)
-    
+
     #client
     nodes[6].setns3position(500,300,0)
     nodes[6].setposition(500,300,0)
-    
+
     #server
     nodes[7].setns3position(100,200,0)
     nodes[7].setposition(100,200,0)
-    
-    
-    
-    
-    
+
+
+
+
+
     #wifi.usecorepositions()
     # PHY tracing
     #wifi.phy.EnableAsciiAll("ns3wifi")
-    
-    
+
+
     session.thread = session.run(vis=False)
-    
+
     #nodes[0].icmd(["sh", "./olsrdservice_start.sh", "start"])
     return session
-    
+
 def main():
+    parse_input('/home/user/wmSDN/emulation/input.txt')
     ''' Main routine when running from command-line.
     '''
     usagestr = "usage: %prog [-h] [options] [args]"
@@ -227,9 +246,9 @@ def main():
     parser.set_defaults(duration = 600, verbose = False)
 
     parser.add_option("-d", "--duration", dest = "duration", type = int,
-                      help = "number of seconds to run the simulation")
+      help = "number of seconds to run the simulation")
     parser.add_option("-v", "--verbose", dest = "verbose",
-                      action = "store_true", help = "be more verbose")
+      action = "store_true", help = "be more verbose")
 
     def usage(msg = None, err = 0):
         sys.stdout.write("\n")
@@ -250,3 +269,4 @@ def main():
 if __name__ == "__main__" or __name__ == "__builtin__":
     session = main()
     print "\nsession =", session
+

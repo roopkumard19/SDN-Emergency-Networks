@@ -44,7 +44,7 @@
                   strokeOpacity: 0.8,
                   strokeWeight: 2,
                   fillColor: '#808080',
-                  fillOpacity: 0.7,
+                  fillOpacity: 0.35,
                   map: map,
                   center: drone,
                   radius: 18
@@ -54,11 +54,10 @@
       var markMeshNodes = function(payload) {
         console.log(payload);
         if (payload.channel == "mesh_nodes") {
-	console.log("mmark_mesh")
           var jsonFromPy = payload.message;//{0: {lat: 37.344691, lng: -121.873373, name:"m1"}, 1: {lat: 37.344846, lng: -121.873891, name:"m2"}};
           var arrayLength = Object.keys(jsonFromPy).length;
           console.log(arrayLength);
-          for (var i = 0; i < arrayLength; i++) {
+          for (var i = 1; i <= arrayLength; i++) {
             myLatLng = {lat:jsonFromPy[i].lat, lng:jsonFromPy[i].lng};
             var Lat = jsonFromPy[i].lat;
             var Lng = jsonFromPy[i].lng;
@@ -67,34 +66,8 @@
               position: myLatLng,
               map: map,
               center: drone,
-              label: jsonFromPy[i].name
+              title: jsonFromPy[i].name
             });
-	    if (jsonFromPy[i].name == "M7") {
-		    inactiveCircle = new google.maps.Circle({
-			  strokeColor: '#E12015',
-			  strokeOpacity: 1,
-			  strokeWeight: 2,
-			  fillColor: '#850D06',
-			  fillOpacity: 0.8,
-			  map: map,
-			  center: drone,
-			  radius: 5
-		   });
-		   inactiveCircle.setCenter({lat:Lat, lng:Lng, alt:0})
-	    }
-	    else {
-		    activeCircle = new google.maps.Circle({
-			  strokeColor: '#235A07',
-			  strokeOpacity: 0.8,
-			  strokeWeight: 2,
-			  fillColor: '#40B206',
-			  fillOpacity: 0.7,
-			  map: map,
-			  center: drone,
-			  radius: 5
-		   });
-		   activeCircle.setCenter({lat:Lat, lng:Lng, alt:0})
-	   }
           }
           map.setCenter(myLatLng);
         }
@@ -126,6 +99,8 @@
       console.log("Subscribing...");
       pubnub.addListener({message:markMeshNodes});
 
+      window.lat = drone.lat;
+      window.lng = drone.lng;
     </script>
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDJbbwFap_qPasM0txWla5pHR-EYEctweY&callback=initMap">

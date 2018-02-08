@@ -59,10 +59,14 @@ def send_to_map():
 
 
 def get_location_from_ip(ip):
-	query = "SELECT LAT,LNG FROM Nodes WHERE IP=\""+ip+"\""
+	query = "SELECT LAT,LNG FROM Nodes WHERE IP=\""+ip+"\" AND Name NOT LIKE \"gw%\""
 	cursor = execute_query(query)
 	return list(cursor[0])
 
+def get_XY_from_ip(ip):
+	query = "SELECT X,Y FROM Nodes WHERE IP=\""+ip+"\" AND Name NOT LIKE \"gw%\""
+        cursor = execute_query(query)
+        return list(cursor[0])
 
 def update_db(ip_list):
 	for ip in ip_list:
@@ -74,3 +78,9 @@ def get_active_nodes():
 	query = "SELECT LAT,LNG FROM Nodes WHERE Status=\"active\""
 	cursor = execute_query(query)
 	return [list(elem) for elem in cursor]
+
+def get_XY_active_nodes():
+        query = "SELECT X,Y FROM Nodes WHERE Status=\"active\""
+        cursor = execute_query(query)
+        return [list(elem) for elem in cursor]
+

@@ -18,7 +18,7 @@ def show(msg, stat):
 
 #time.sleep(2)
 def failed_nodes_dummy_call():
-	with open("log2.txt", 'r') as infile:
+	with open("failedIPs.txt", 'r') as infile:
 		final = []
 		for line in infile:
 			final.append(line.rstrip())
@@ -43,8 +43,8 @@ def mesh_nodes_dummy_call():
 
 
 def main():
-#	mesh_nodes_dummy_call()
-	failed_nodes_dummy_call()
+	mesh_nodes_dummy_call()
+#	failed_nodes_dummy_call()
 
 if __name__ == '__main__':
 	main()

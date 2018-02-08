@@ -98,12 +98,14 @@ cat coreconf.py #check the paths
 core-cleanup.sh && python -i ./ns3SDN.py -d 7200
 
 # With GUI
-pushd ~/ns-allinone-3.16/ns-3.16
+pushd ~/ns-allinone-3.17/ns-3.17
 sudo ./waf shell
 cored
 
+
 # in another terminal
-cored -e ./ns3wifi.py
+cd ~/wmSDN/emulation
+cored -e ./ns3SDN.py
 # in a third terminal
 core
 # now select the running session
