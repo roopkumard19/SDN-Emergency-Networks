@@ -161,7 +161,7 @@ def wifisession(opt):
     hub1.setposition(450,300,0)
     ptp1 = session.addobj(cls=pycore.nodes.PtpNet, name="ptp1") 
     ptp2 = session.addobj(cls=pycore.nodes.PtpNet, name="ptp2") #controller network
-
+    hub_ID = hub1.objid
     nodes = []
     def ourmacaddress(n):
         return MacAddr.fromstring("02:02:00:00:00:%02x" % n)
@@ -183,7 +183,7 @@ def wifisession(opt):
         node = session.addnode(name = "gw%d" % i)
         node.newnetif(wifi, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))
         node.newnetif(hub1,["192.168.200.%d/24" % i])
-        session.services.addservicestonode(node,"router",myservice,verbose=True)
+        session.services.addservicestonode(node,"drone",myservice,verbose=True)
         session.services.bootnodeservices(node)
         nodes.append(node)
 
@@ -216,8 +216,8 @@ def wifisession(opt):
     g_ind = 0
     for i in xrange(N+1, numWirelessNode + 1):
         print "setting position for nodes[i]",i
-        nodes[N + g_ind].setns3position(nX[g_ind],nY[g_ind],0)
-        nodes[N + g_ind].setposition(nX[g_ind],nY[g_ind],0)
+        nodes[N + g_ind].setns3position(gX[g_ind],gY[g_ind],0)
+        nodes[N + g_ind].setposition(gX[g_ind],gY[g_ind],0)
         g_ind = g_ind + 1
     
     nodes[len(nodes)-3].setns3position(500,300,0)
@@ -234,6 +234,7 @@ def wifisession(opt):
     session.thread = session.run(vis=False)
 
     #nodes[0].icmd(["sh", "./olsrdservice_start.sh", "start"])
+    
     return session
 
 def main():
