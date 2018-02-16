@@ -113,7 +113,7 @@ core
 
 # on another shell
 cd ~/wmSDN/emulation
-./starthosts.sh && ./startovs.sh
+./starthosts.sh && ./startovs.sh #***********************************8Before running this, use source bashrc inside emulation directory
 
 # now the emulation should be up and running
 
