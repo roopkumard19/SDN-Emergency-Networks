@@ -42,8 +42,8 @@ core
 # now select the running session
 
 '''
-
-import os, sys, time, optparse, datetime, math
+import subprocess
+import os, sys, time, optparse, datetime, math, socket
 try:
     from core import pycore 
 except ImportError:
@@ -59,9 +59,15 @@ except ImportError:
     from core import pycore
 
 import ns.core
+from core.sdt import Sdt
 from core.misc import ipaddr 
 from core.misc.ipaddr import MacAddr
 from corens3.obj import Ns3Session, Ns3WifiNet, CoreNs3Net
+
+import sys
+sys.path.insert(0, '/home/user/wmSDN/controller')
+
+from olsr_parser import *
 #sys.path.append(os.getcwd())
 #import coreconf
 
@@ -83,6 +89,8 @@ nX = []
 nY = []
 gX = []
 gY = []
+dX = []
+dY = []
 
 mesh_location = []
 def parse_input(file):
@@ -93,6 +101,8 @@ def parse_input(file):
     global nY
     global gX
     global gY
+    global dX
+    global dY
 
     with open(file,'r') as f:
         #n = int(f.readline())
@@ -107,9 +117,13 @@ def parse_input(file):
             gX.append(int(temp[0]))
             gY.append(int(temp[1]))
         D = int(f.readline().rstrip())
+        for i in range(0,D):
+            temp = f.readline().rstrip().split(',')
+            dX.append(int(temp[0]))
+            dY.append(int(temp[1]))
         print "Nodes:",N
         print "Gateways:",G
-        print nX,nY,gX,gY
+        print nX,nY,gX,gY,dX,dY
         print "Drones:",D
 
 def add_to_server(session):
@@ -134,6 +148,8 @@ def wifisession(opt):
     global nY
     global gX
     global gY
+    global dX
+    global dY
 
     myservice = "OpenvswitchService"
     #myservice = "OpenflowService"
@@ -150,30 +166,40 @@ def wifisession(opt):
     session.services.importcustom(custom_services_dir) #coreconf
     add_to_server(session)
 
-    wifi = session.addobj(cls=Ns3WifiNet, name="wlan1", rate="OfdmRate54Mbps")
+    wifi1 = session.addobj(cls=Ns3WifiNet, name="wlan1", rate="OfdmRate54Mbps")
+    wifi2 = session.addobj(cls=Ns3WifiNet, name="wlan2", rate="OfdmRate54Mbps")
     #wifi.wifi.SetStandard(ns.wifi.WIFI_PHY_STANDARD_80211b)
     #wifi.wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager", "DataMode",ns.core.StringValue("DsssRate11Mbps"), "NonUnicastMode", ns.core.StringValue("DsssRate11Mbps"))
-    wifi.setposition(30, 30, 0)
-    wifi.phy.Set("RxGain", ns.core.DoubleValue(20.0))
+    wifi1.setposition(30, 30, 0)
+    wifi1.phy.Set("RxGain", ns.core.DoubleValue(20.0))
+    wifi2.setposition(1668, 34, 0)
+    wifi2.phy.Set("RxGain", ns.core.DoubleValue(20.0))
     prefix = ipaddr.IPv4Prefix("10.0.0.0/16")
 
     hub1 = session.addobj(cls=pycore.nodes.HubNode, name="hub1")
-    hub1.setposition(450,300,0)
+    hub1.setposition(747,300,0)
     ptp1 = session.addobj(cls=pycore.nodes.PtpNet, name="ptp1") 
-    ptp2 = session.addobj(cls=pycore.nodes.PtpNet, name="ptp2") #controller network
+    ptp2 = session.addobj(cls=pycore.nodes.PtpNet, name="ptp2") #controller1 network
+    ptp3 = session.addobj(cls=pycore.nodes.PtpNet, name="ptp3") #controller2 network
     hub_ID = hub1.objid
     nodes = []
+    drones = []
     def ourmacaddress(n):
         return MacAddr.fromstring("02:02:00:00:00:%02x" % n)
 
     for i in xrange(1, N+1):
         print "Adding node:",i
         node = session.addnode(name = "n%d" % i)
-        node.newnetif(wifi, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))
+        if i <= 4:
+            node.newnetif(wifi1, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))
+        else:
+             node.newnetif(wifi2, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))
         if i == 1:
             node.newnetif(ptp1,["192.168.1.2/24"])    
         if i == 3: #the wireless node which is attached to the controller
             node.newnetif(ptp2,["10.100.100.2/24"])
+        if i == 8:
+            node.newnetif(ptp3,["10.100.100.2/24"])
         session.services.addservicestonode(node,"router",myservice,verbose=True)
         session.services.bootnodeservices(node)
         nodes.append(node)
@@ -181,28 +207,35 @@ def wifisession(opt):
     for i in xrange(N+1, numWirelessNode + 1):
         print "Adding gateway:",i
         node = session.addnode(name = "gw%d" % i)
-        node.newnetif(wifi, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))
+        if i == 12:
+            node.newnetif(wifi2, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))
+        else:
+            node.newnetif(wifi1, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))
+
         node.newnetif(hub1,["192.168.200.%d/24" % i])
-        session.services.addservicestonode(node,"drone",myservice,verbose=True)
+        session.services.addservicestonode(node,"router",myservice,verbose=True)
         session.services.bootnodeservices(node)
         nodes.append(node)
 
-    node = session.addnode(name = "client")
-    node.newnetif(hub1,["192.168.200.1/24"])
-    node.addaddr(0, "192.168.200.11/24")
-    node.addaddr(0, "192.168.200.12/24")
-    node.addaddr(0, "192.168.200.13/24")
-    node.addaddr(0, "192.168.200.14/24")
-    node.addaddr(0, "192.168.200.15/24")
-    nodes.append(node)
-
-    node = session.addnode(name = "server")
-    node.newnetif(ptp1,["192.168.1.1/24"])
-    nodes.append(node)
-
-    node = session.addnode(name = "controller")
+    node = session.addnode(name = "controller1")
     node.newnetif(ptp2,["10.100.100.100/24"])
     nodes.append(node)
+
+    node = session.addnode(name = "controller2")
+    node.newnetif(ptp3,["10.100.100.100/24"])
+    nodes.append(node)
+
+
+    for i in xrange(len(nodes)+1, len(nodes)+D+1):
+        print "Adding drone:",i
+        node = session.addnode(name = "d%d" % i)
+        if i <=16:
+            node.newnetif(wifi1, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))  
+        else:
+            node.newnetif(wifi2, ["%s/%s" % (prefix.addr(i), prefix.prefixlen)], hwaddr=ourmacaddress(i))  
+        session.services.addservicestonode(node,"router",myservice,verbose=True)
+        session.services.bootnodeservices(node)
+        drones.append(node)
 
     session.setupconstantmobility()
 
@@ -220,12 +253,16 @@ def wifisession(opt):
         nodes[N + g_ind].setposition(gX[g_ind],gY[g_ind],0)
         g_ind = g_ind + 1
     
-    nodes[len(nodes)-3].setns3position(500,300,0)
-    nodes[len(nodes)-3].setposition(500,300,0)
+    for i in xrange(0, D):
+        print "setting position for drones[i]",i
+        drones[i].setns3position(dX[i],dY[i],0)
+        drones[i].setposition(dX[i],dY[i],0)
+
+    nodes[len(nodes)-2].setns3position(257,119,0)
+    nodes[len(nodes)-2].setposition(257,119,0)
     
-    nodes[len(nodes)-2].setns3position(100,200,0)
-    nodes[len(nodes)-2].setposition(100,200,0)
-    
+    nodes[len(nodes)-1].setns3position(1466,200,0)
+    nodes[len(nodes)-1].setposition(1466,200,0)
     #wifi.usecorepositions()
     # PHY tracing
     #wifi.phy.EnableAsciiAll("ns3wifi")
@@ -233,8 +270,13 @@ def wifisession(opt):
 
     session.thread = session.run(vis=False)
 
+    #session.connect(session.objbyname(session.name))
+    #print "session_ID:",session.sessionid
+    #print session.master
+    #subprocess.call(['./modifygui.sh' '2','10','13'])
+
+    #os.system("/home/user/wmSDN/emulation/modifygui.sh 2 15 18")
     #nodes[0].icmd(["sh", "./olsrdservice_start.sh", "start"])
-    
     return session
 
 def main():
