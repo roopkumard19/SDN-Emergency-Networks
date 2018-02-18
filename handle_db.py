@@ -26,7 +26,7 @@ def execute_query(query):
 		cursor = cnx.cursor()
 		result = ""
 		cursor.execute(query)
-		if "update" not in query:
+		if "SELECT" in query:
 			result = cursor.fetchall()
                 
 	except mysql.connector.Error as err:
@@ -84,3 +84,22 @@ def get_XY_active_nodes():
         cursor = execute_query(query)
         return [list(elem) for elem in cursor]
 
+def insert_into(fname, table_name):
+	with open(fname, "r") as infile:
+		i = 1
+		for line in infile:
+			name = "n"+str(i)
+			ip = "10.0.0."+str(i)
+                        tmp_list = line.rstrip().split(', ')
+			lat = float(tmp_list[0])
+                        lng = float(tmp_list[1])
+			query = "INSERT INTO {} (Name, IP, MAC, LAT, LNG, Status) VALUES(\"{}\",\"{}\",\"5C-7E-69-C1-EE-8A\",{}, {}, \"active\")".format(table_name,name,ip,lat,lng)
+			cursor = execute_query(query)
+			i = i + 1
+
+
+def main():
+	insert_into("sample_gps1.txt", "Nodes1")
+	insert_into("sample_gps2.txt", "Nodes2")
+
+main()

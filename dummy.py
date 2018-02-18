@@ -32,11 +32,13 @@ def mesh_nodes_dummy_call():
 		i = 0
                 for line in infile:
 			tmp_dict = {}
-			tmp_list = line.rstrip().split(',')
-                        tmp_dict['name'] = "M"+str(i)
-			tmp_dict['lat'] = float(tmp_list[0])
-			tmp_dict['lng'] = float(tmp_list[1])
-			final[i] = tmp_dict
+			tmp_list = line.rstrip().split(', ')
+			if len(tmp_list) > 0:
+				tmp_dict['name'] = "M"+str(i)
+				print tmp_list	
+				tmp_dict['lat'] = float(tmp_list[0])
+				tmp_dict['lng'] = float(tmp_list[1])
+				final[i] = tmp_dict
 			i = i + 1
 		print final
                 pubnub.publish().channel("mesh_nodes").message(final).async(show)

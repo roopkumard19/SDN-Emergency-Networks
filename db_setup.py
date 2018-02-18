@@ -32,7 +32,7 @@ def main():
 	
 	
 
-	TABLE = "CREATE TABLE `Nodes` (`ID` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY, `Name` varchar(40) NOT NULL, `IP` varchar(40) NOT NULL, `MAC` varchar(50) NOT NULL, `LAT` float(10,6) NOT NULL, `LNG` float(10,6) NOT NULL)"
+	TABLE = "CREATE TABLE `Nodes1` (`ID` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY, `Name` varchar(40) NOT NULL, `IP` varchar(40) NOT NULL, `MAC` varchar(50) NOT NULL, `LAT` float(10,6) NOT NULL, `LNG` float(10,6) NOT NULL)"
 
 	#connect to the mysql
 	cnx = mysql.connector.connect(user='root', password='toor@1234')
